@@ -1,6 +1,36 @@
+
 spring:
   application:
     name: aladin
+
+  config:
+    import: optional:file:.env[.properties]
+
+  # Database - Supabase PostgreSQL
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 5
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# CORS
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+# Server
+server:
+  port: ${SERVER_PORT:8080}
