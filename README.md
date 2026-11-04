@@ -74,6 +74,7 @@ cd 39-COLLABORATION-SERVER-ALADIN
 DB_URL=jdbc:postgresql://<host>:<port>/<database>
 DB_USERNAME=<username>
 DB_PASSWORD=<password>
+JPA_DDL_AUTO=validate
 SERVER_PORT=8080
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
@@ -83,10 +84,13 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000
 | `DB_URL` | 필수 | PostgreSQL JDBC URL |
 | `DB_USERNAME` | 필수 | PostgreSQL 사용자 이름 |
 | `DB_PASSWORD` | 필수 | PostgreSQL 비밀번호 |
+| `JPA_DDL_AUTO` | 선택 | Hibernate 스키마 처리 방식, 기본값 `validate` |
 | `SERVER_PORT` | 선택 | 애플리케이션 실행 포트, 기본값 `8080` |
 | `CORS_ALLOWED_ORIGINS` | 선택 | 허용할 프론트엔드 Origin, 기본값 `http://localhost:3000` |
 
 `.env` 파일은 Git으로 관리하지 않습니다.
+
+공유·운영 DB에서는 기본값인 `validate`를 사용합니다. 격리된 로컬 개발 DB에서 Hibernate가 스키마를 자동 변경해야 할 때만 `JPA_DDL_AUTO=update`를 설정합니다.
 
 ### 3. 애플리케이션 실행
 
@@ -111,6 +115,71 @@ http://localhost:8080/swagger-ui/index.html
 ```
 
 `SERVER_PORT`를 변경했다면 URL의 포트도 같은 값으로 변경합니다.
+
+## 자동 배포 최초 설정
+
+`main` 브랜치에 변경사항이 반영되면 GitHub Actions가 JAR를 빌드해 EC2로 전송하고 `aladin.service`를 재시작합니다. 배포 후 Swagger UI가 1분 안에 응답하지 않으면 이전 JAR로 복구합니다.
+
+### 1. 배포 전용 SSH 키 생성
+
+로컬 Windows PowerShell에서 실행합니다.
+
+```powershell
+ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\aladin-deploy" -C "github-actions-aladin"
+```
+
+생성된 공개키를 기존 EC2 접속 키로 서버에 등록합니다.
+
+```powershell
+Get-Content "$env:USERPROFILE\.ssh\aladin-deploy.pub" | ssh -i "<기존_EC2_PEM_경로>" ubuntu@<EC2_PUBLIC_DNS> "umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys"
+```
+
+개인키 `aladin-deploy`는 EC2나 저장소에 올리지 않습니다.
+
+### 2. GitHub production Environment Secrets 등록
+
+GitHub 저장소의 `Settings` → `Environments` → `production` → `Environment secrets`에 다음 값을 등록합니다.
+
+| Secret | 값 |
+|---|---|
+| `EC2_HOST` | EC2 Public DNS 또는 Elastic IP |
+| `EC2_USER` | `ubuntu` |
+| `EC2_SSH_PRIVATE_KEY` | `aladin-deploy` 개인키 전체 내용 |
+| `EC2_KNOWN_HOSTS` | 신뢰할 수 있는 환경에서 확인한 EC2 SSH 호스트 키 |
+
+호스트 키는 EC2에 정상 접속한 로컬 환경에서 다음 명령으로 확인할 수 있습니다.
+
+```powershell
+ssh-keyscan -H <EC2_PUBLIC_DNS>
+```
+
+출력된 호스트 키의 지문을 기존 SSH 접속에서 확인한 지문과 대조한 뒤 전체 줄을 `EC2_KNOWN_HOSTS`에 저장합니다.
+
+### 3. EC2 systemd 재시작 권한 설정
+
+EC2에서 다음 파일을 엽니다.
+
+```bash
+sudo visudo -f /etc/sudoers.d/aladin-deploy
+```
+
+아래 한 줄을 추가합니다.
+
+```text
+ubuntu ALL=(root) NOPASSWD: /usr/bin/systemctl restart aladin
+```
+
+저장 후 문법을 검사합니다.
+
+```bash
+sudo visudo -cf /etc/sudoers.d/aladin-deploy
+```
+
+### 4. EC2 보안 그룹 확인
+
+GitHub-hosted runner가 EC2의 SSH 포트에 접근할 수 있어야 합니다. SSH 포트를 `0.0.0.0/0`에 상시 공개하지 말고, 팀의 보안 정책에 맞는 제한된 접근 방식이나 AWS Systems Manager를 사용합니다.
+
+설정이 끝나면 GitHub의 `Actions` → `Aladin CI/CD` → `Run workflow`에서 최초 배포를 검증합니다. 이후에는 `main` 브랜치에 변경사항이 반영될 때 자동으로 배포됩니다.
 
 ## 협업 규칙
 
