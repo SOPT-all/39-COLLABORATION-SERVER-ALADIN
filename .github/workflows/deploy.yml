@@ -1,4 +1,3 @@
-
 name: Aladin CI/CD
 
 on:
@@ -48,6 +47,49 @@ jobs:
           test -n "$JAR"
           cp "$JAR" aladin.jar
           sha256sum aladin.jar > aladin.jar.sha256
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/aladin-deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/aladin-deploy ~/.ssh/known_hosts
+
+          scp -o BatchMode=yes -i ~/.ssh/aladin-deploy \
+            aladin.jar \
+            "$EC2_USER@$EC2_HOST:aladin.jar.next"
+
+          ssh -o BatchMode=yes -i ~/.ssh/aladin-deploy \
+            "$EC2_USER@$EC2_HOST" 'bash -s' <<'EOF'
+          set -eu
+
+          TARGET="$HOME/39-COLLABORATION-SERVER-ALADIN/build/libs/aladin-0.0.1-SNAPSHOT.jar"
+          NEXT="$HOME/aladin.jar.next"
+          BACKUP="${TARGET}.previous"
+
+          test -f "$NEXT"
+          cp -f "$TARGET" "$BACKUP"
+          mv -f "$NEXT" "$TARGET"
+
+          if sudo systemctl restart aladin; then
+            for attempt in $(seq 1 12); do
+              if curl -fsS http://127.0.0.1:8080/swagger-ui/index.html >/dev/null; then
+                exit 0
+              fi
+              sleep 5
+            done
+          fi
+
+          mv -f "$BACKUP" "$TARGET"
+          sudo systemctl restart aladin
+          exit 1
+          EOF
 
       - name: Publish Release
         env:
