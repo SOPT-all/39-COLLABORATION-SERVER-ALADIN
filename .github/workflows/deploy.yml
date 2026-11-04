@@ -1,0 +1,58 @@
+
+name: Aladin CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aladin-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Build and Test
+        run: |
+          chmod +x gradlew
+          ./gradlew clean test bootJar
+
+      - name: Prepare JAR
+        run: |
+          JAR=$(find build/libs -maxdepth 1 \
+            -name '*.jar' \
+            ! -name '*-plain.jar' \
+            -type f | head -n 1)
+
+          test -n "$JAR"
+          cp "$JAR" aladin.jar
+          sha256sum aladin.jar > aladin.jar.sha256
+
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create \
+            "deploy-${GITHUB_SHA}" \
+            aladin.jar aladin.jar.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Aladin ${GITHUB_SHA}" \
+            --notes "Automated deployment" \
+            --latest
