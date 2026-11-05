@@ -83,13 +83,13 @@ private Album album;
 - 의존성은 `private final` 생성자 주입만 사용합니다. `@Autowired` 필드 주입은 금지입니다.
 - 책임이 다르면 서비스를 분리하고, 검증만 하는 책임은 `XxxValidator`로 분리합니다.
 - 네이밍: ID 단순 조회는 `read...`, 그 외는 `find...`. 없으면 예외를 던지는 조회는 `findByIdOrThrow`처럼 이름에 드러냅니다.
-- 여러 엔티티를 묶어 반환해야 하면 `service/vo/`에 record로 VO를 만듭니다. (예: `SongWithDetail`)
+- 여러 엔티티를 묶어 반환해야 하면 `service/vo/`에 record로 VO를 만듭니다. (예: `BookWithDetail`)
+- Service는 도메인 엔티티 또는 VO를 반환하며, Controller의 요청·응답 DTO에 의존하지 않습니다. 응답 DTO 변환은 Controller에서 DTO의 정적 팩토리 메서드 `of(...)`를 호출해 처리합니다.
 
 ### Controller / DTO
 
-- URL은 버전 prefix가 붙은 복수형 자원입니다. (`/v1/songs`)
+- URL은 버전 prefix가 붙은 복수형 자원입니다. (`/v1/books`)
 - Swagger 어노테이션은 `XxxApi` 인터페이스에 두고, `XxxController`가 구현합니다. 컨트롤러 본체는 어노테이션 노이즈 없이 유지합니다.
-- 인증 도입 전까지 로그인 사용자는 `@RequestHeader("User-Id") Long userId`로 받습니다.
 - 모든 응답은 `CommonResponse<T>`로 감쌉니다. `CommonResponse.success(SuccessCode, data)`, 데이터가 없으면 `CommonResponse.success(SuccessCode)`.
 - DTO는 모두 `record`이고, 변환 책임은 DTO 안의 정적 팩토리 `of(...)`에 둡니다. 응답 안에서만 쓰는 하위 구조는 중첩 record로 둡니다.
 - DTO 필드에는 `@Schema(description = "...", example = "...")`를 붙입니다.
@@ -97,13 +97,13 @@ private Album album;
 
 ### 에러·성공 코드와 예외
 
-- 도메인별로 `XxxErrorCode implements ErrorCode`, `XxxSuccessCode implements SuccessCode` enum을 만듭니다. 상수명은 `<도메인>_<상태>` 대문자 SNAKE_CASE(`SONG_NOT_FOUND`), 메시지는 사용자에게 노출되는 한국어 문장입니다.
+- 도메인별로 `XxxErrorCode implements ErrorCode`, `XxxSuccessCode implements SuccessCode` enum을 만듭니다. 상수명은 `<도메인>_<상태>` 대문자 SNAKE_CASE(`BOOK_NOT_FOUND`), 메시지는 사용자에게 노출되는 한국어 문장입니다.
 
 ```java
 @Getter
 @RequiredArgsConstructor
-public enum SongErrorCode implements ErrorCode {
-    SONG_NOT_FOUND(HttpStatus.NOT_FOUND, "곡 정보를 찾을 수 없습니다.");
+public enum BookErrorCode implements ErrorCode {
+    BOOK_NOT_FOUND(HttpStatus.NOT_FOUND, "도서 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
