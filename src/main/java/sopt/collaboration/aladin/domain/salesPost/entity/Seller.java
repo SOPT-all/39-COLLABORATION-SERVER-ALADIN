@@ -1,4 +1,4 @@
-package sopt.collaboration.aladin.domain.usedbook.entity;
+package sopt.collaboration.aladin.domain.salesPost.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

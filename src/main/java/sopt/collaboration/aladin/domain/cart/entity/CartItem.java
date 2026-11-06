@@ -13,7 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import sopt.collaboration.aladin.domain.usedbook.entity.UsedBookSalesPost;
+import sopt.collaboration.aladin.domain.salesPost.entity.UsedBookSalesPost;
 
 @Entity
 @Getter
