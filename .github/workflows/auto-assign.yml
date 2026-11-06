@@ -1,0 +1,37 @@
+name: Auto assign
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  assign:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign author and request reviewers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          TEAM: guswnsj0112 KateteDeveloper isumin418
+        run: |
+          gh api "repos/${GH_REPO}/issues/${PR_NUMBER}/assignees" \
+            -f "assignees[]=${PR_AUTHOR}"
+
+          args=()
+          for user in ${TEAM}; do
+            if [ "${user,,}" != "${PR_AUTHOR,,}" ]; then
+              args+=(-f "reviewers[]=${user}")
+            fi
+          done
+
+          if [ "${#args[@]}" -gt 0 ]; then
+            gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}/requested_reviewers" "${args[@]}"
+          fi
