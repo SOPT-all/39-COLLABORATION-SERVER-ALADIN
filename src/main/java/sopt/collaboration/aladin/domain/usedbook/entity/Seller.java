@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -27,7 +29,8 @@ public class Seller {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sellerType")
+    @Column(name = "seller_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private SellerType sellerType;
 
     @Column(name = "created_at")

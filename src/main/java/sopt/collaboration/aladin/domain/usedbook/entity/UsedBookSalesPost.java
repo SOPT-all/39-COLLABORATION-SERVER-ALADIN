@@ -17,6 +17,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sopt.collaboration.aladin.domain.book.entity.Book;
 import sopt.collaboration.aladin.domain.book.entity.BookCondition;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -38,6 +40,7 @@ public class UsedBookSalesPost {
     private Integer price;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "condition", nullable = false)
     private BookCondition condition;
 
