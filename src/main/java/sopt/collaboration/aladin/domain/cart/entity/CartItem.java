@@ -40,4 +40,13 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usedbook_sales_post_id", insertable = false, updatable = false, nullable = false)
     private UsedBookSalesPost usedBookSalesPost;
+
+    private CartItem(Long cartId, Long usedBookSalesPostId) {
+        this.cartId = cartId;
+        this.usedBookSalesPostId = usedBookSalesPostId;
+    }
+
+    public static CartItem create(Long cartId, Long usedBookSalesPostId) {
+        return new CartItem(cartId, usedBookSalesPostId);
+    }
 }
