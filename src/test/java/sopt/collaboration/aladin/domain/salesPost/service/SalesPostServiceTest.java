@@ -42,10 +42,11 @@ class SalesPostServiceTest {
     private SalesPostService salesPostService;
 
     @Test
-    void 할인율과_배송비를_계산해_판매_목록을_반환한다() {
-        Book book = book(1L, "소년이 온다", 15000);
-        Seller seller = seller(3L, "알라딘 중고서점", 3500, 100000);
-        UsedBookSalesPost post = salesPost(10L, 5400, BookCondition.EXCELLENT, true, false, seller);
+    void 판매글의_할인율과_판매가_기준_배송비를_담아_판매_목록을_반환한다() {
+        Book book = book(1L, "소년이 온다");
+        Seller seller = seller(3L, "알라딘 중고서점", 100000);
+        UsedBookSalesPost post = salesPost(10L, 5400, 64, BookCondition.EXCELLENT, true, false, seller);
+        when(seller.calculateDeliveryFee(5400)).thenReturn(3500);
         when(bookService.findByIdOrThrow(1L)).thenReturn(book);
         when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
                 .thenReturn(List.of(post));
@@ -66,40 +67,8 @@ class SalesPostServiceTest {
     }
 
     @Test
-    void 판매가가_무료배송_기준_이상이면_배송비가_0원이다() {
-        Book book = book(1L, "소년이 온다", 150000);
-        Seller seller = seller(3L, "판매자", 3500, 100000);
-        UsedBookSalesPost post = salesPost(10L, 100000, BookCondition.GOOD, false, false, seller);
-        when(bookService.findByIdOrThrow(1L)).thenReturn(book);
-        when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
-                .thenReturn(List.of(post));
-
-        BookSellers result = salesPostService.findSellersByBookId(1L, PriceSort.LOWEST, null, false);
-
-        assertThat(result.sellers().getFirst().deliveryFee()).isZero();
-    }
-
-    @Test
-    void 정가가_0이하이거나_판매가가_정가보다_비싸면_할인율은_0이다() {
-        Seller seller = seller(3L, "판매자", 3500, 100000);
-        UsedBookSalesPost post = salesPost(10L, 5000, BookCondition.GOOD, false, false, seller);
-        Book noOriginalPrice = book(1L, "정가 없음", 0);
-        Book cheaperThanSale = book(1L, "정가보다 비쌈", 4000);
-        when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
-                .thenReturn(List.of(post));
-
-        when(bookService.findByIdOrThrow(1L)).thenReturn(noOriginalPrice);
-        assertThat(salesPostService.findSellersByBookId(1L, PriceSort.LOWEST, null, false)
-                .sellers().getFirst().discountRate()).isZero();
-
-        when(bookService.findByIdOrThrow(1L)).thenReturn(cheaperThanSale);
-        assertThat(salesPostService.findSellersByBookId(1L, PriceSort.LOWEST, null, false)
-                .sellers().getFirst().discountRate()).isZero();
-    }
-
-    @Test
     void 등급을_생략하면_모든_등급으로_조회한다() {
-        Book book = book(1L, "소년이 온다", 15000);
+        Book book = book(1L, "소년이 온다");
         when(bookService.findByIdOrThrow(1L)).thenReturn(book);
         when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
                 .thenReturn(List.of());
@@ -112,7 +81,7 @@ class SalesPostServiceTest {
 
     @Test
     void 등급을_지정하면_해당_등급과_편의점_배송_조건으로_조회한다() {
-        Book book = book(1L, "소년이 온다", 15000);
+        Book book = book(1L, "소년이 온다");
         when(bookService.findByIdOrThrow(1L)).thenReturn(book);
         when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
                 .thenReturn(List.of());
@@ -125,7 +94,7 @@ class SalesPostServiceTest {
 
     @Test
     void 가격_정렬_기준에_따라_정렬_방향이_정해진다() {
-        Book book = book(1L, "소년이 온다", 15000);
+        Book book = book(1L, "소년이 온다");
         when(bookService.findByIdOrThrow(1L)).thenReturn(book);
         when(salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(eq(1L), any(), anyBoolean()))
                 .thenReturn(List.of());
@@ -149,28 +118,28 @@ class SalesPostServiceTest {
         verifyNoInteractions(salesPostRepository);
     }
 
-    private Book book(Long id, String title, int originalPrice) {
+    private Book book(Long id, String title) {
         Book book = mock(Book.class);
         lenient().when(book.getId()).thenReturn(id);
         lenient().when(book.getTitle()).thenReturn(title);
-        lenient().when(book.getOriginalPrice()).thenReturn(originalPrice);
         return book;
     }
 
-    private Seller seller(Long id, String name, int deliveryFee, int freeDeliveryThreshold) {
+    private Seller seller(Long id, String name, int freeDeliveryThreshold) {
         Seller seller = mock(Seller.class);
         lenient().when(seller.getId()).thenReturn(id);
         lenient().when(seller.getName()).thenReturn(name);
-        lenient().when(seller.getDeliveryFee()).thenReturn(deliveryFee);
         lenient().when(seller.getFreeDeliveryThreshold()).thenReturn(freeDeliveryThreshold);
         return seller;
     }
 
     private UsedBookSalesPost salesPost(
-            Long id, int price, BookCondition condition, boolean cvsDelivery, boolean sold, Seller seller) {
+            Long id, int price, int discountRate, BookCondition condition,
+            boolean cvsDelivery, boolean sold, Seller seller) {
         UsedBookSalesPost post = mock(UsedBookSalesPost.class);
         when(post.getId()).thenReturn(id);
         when(post.getPrice()).thenReturn(price);
+        when(post.calculateDiscountRate()).thenReturn(discountRate);
         when(post.getCondition()).thenReturn(condition);
         when(post.getCvsDelivery()).thenReturn(cvsDelivery);
         when(post.getSold()).thenReturn(sold);

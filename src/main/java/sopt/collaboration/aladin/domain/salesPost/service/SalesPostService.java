@@ -32,21 +32,20 @@ public class SalesPostService {
                 .orElseThrow(SalesPostNotFoundException::new);
         Seller seller = salesPost.getSeller();
         int salePrice = salesPost.getPrice();
-        int shippingFee = salePrice >= seller.getFreeDeliveryThreshold() ? 0 : seller.getDeliveryFee();
+        int shippingFee = seller.calculateDeliveryFee(salePrice);
 
         return new SalesPostDetail(salesPost, shippingFee, REMOTE_SHIPPING_FEE, salePrice + shippingFee);
     }
 
     public BookSellers findSellersByBookId(Long bookId, PriceSort priceSort, Grade grade, boolean cvsDelivery) {
         Book book = bookService.findByIdOrThrow(bookId);
-        int originalPrice = book.getOriginalPrice();
         List<BookCondition> conditions = grade == null
                 ? List.of(BookCondition.values())
                 : List.of(grade.toCondition());
 
         List<SellerPost> sellers = findSalesPosts(bookId, priceSort, conditions, cvsDelivery)
                 .stream()
-                .map(salesPost -> toSellerPost(salesPost, originalPrice))
+                .map(this::toSellerPost)
                 .toList();
 
         return new BookSellers(book.getId(), book.getTitle(), sellers);
@@ -60,7 +59,7 @@ public class SalesPostService {
         return salesPostRepository.findAllWithSellerByBookIdOrderByPriceAsc(bookId, conditions, cvsDelivery);
     }
 
-    private SellerPost toSellerPost(UsedBookSalesPost salesPost, int originalPrice) {
+    private SellerPost toSellerPost(UsedBookSalesPost salesPost) {
         Seller seller = salesPost.getSeller();
         int price = salesPost.getPrice();
 
@@ -70,18 +69,11 @@ public class SalesPostService {
                 seller.getName(),
                 salesPost.getCondition(),
                 price,
-                calculateDiscountRate(originalPrice, price),
-                price >= seller.getFreeDeliveryThreshold() ? 0 : seller.getDeliveryFee(),
+                salesPost.calculateDiscountRate(),
+                seller.calculateDeliveryFee(price),
                 seller.getFreeDeliveryThreshold(),
                 Boolean.TRUE.equals(salesPost.getCvsDelivery()),
                 Boolean.TRUE.equals(salesPost.getSold())
         );
-    }
-
-    private int calculateDiscountRate(int originalPrice, int salePrice) {
-        if (originalPrice <= 0) {
-            return 0;
-        }
-        return Math.max(0, (int) ((long) (originalPrice - salePrice) * 100 / originalPrice));
     }
 }

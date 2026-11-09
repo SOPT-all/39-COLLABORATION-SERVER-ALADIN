@@ -117,9 +117,7 @@ public class CartService {
         Seller seller = firstPost.getSeller();
         List<CartItemDetail> items = cartItems.stream().map(this::toCartItemDetail).toList();
         int totalSalePrice = items.stream().mapToInt(CartItemDetail::salePrice).sum();
-        int deliveryFee = totalSalePrice >= seller.getFreeDeliveryThreshold()
-                ? 0
-                : seller.getDeliveryFee();
+        int deliveryFee = seller.calculateDeliveryFee(totalSalePrice);
         boolean cvsDelivery = cartItems.stream()
                 .allMatch(item -> Boolean.TRUE.equals(item.getUsedBookSalesPost().getCvsDelivery()));
 
@@ -136,8 +134,6 @@ public class CartService {
     private CartItemDetail toCartItemDetail(CartItem cartItem) {
         UsedBookSalesPost salesPost = cartItem.getUsedBookSalesPost();
         Book book = salesPost.getBook();
-        int originalPrice = book.getOriginalPrice();
-        int salePrice = salesPost.getPrice();
 
         return new CartItemDetail(
                 cartItem.getId(),
@@ -146,16 +142,9 @@ public class CartService {
                 book.getTitle(),
                 book.getImageUrl(),
                 salesPost.getCondition(),
-                originalPrice,
-                salePrice,
-                calculateDiscountRate(originalPrice, salePrice)
+                book.getOriginalPrice(),
+                salesPost.getPrice(),
+                salesPost.calculateDiscountRate()
         );
-    }
-
-    private int calculateDiscountRate(int originalPrice, int salePrice) {
-        if (originalPrice <= 0) {
-            return 0;
-        }
-        return Math.max(0, (int) ((long) (originalPrice - salePrice) * 100 / originalPrice));
     }
 }

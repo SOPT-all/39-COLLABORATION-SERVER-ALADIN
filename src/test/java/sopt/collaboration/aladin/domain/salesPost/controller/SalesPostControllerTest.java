@@ -55,8 +55,7 @@ class SalesPostControllerTest {
         Seller seller = mock(Seller.class);
         UsedBookSalesPost salesPost = mock(UsedBookSalesPost.class);
         when(seller.getName()).thenReturn("우나야하");
-        when(seller.getDeliveryFee()).thenReturn(4200);
-        when(seller.getFreeDeliveryThreshold()).thenReturn(100000);
+        when(seller.calculateDeliveryFee(salePrice)).thenReturn(expectedShippingFee);
         when(salesPost.getId()).thenReturn(103L);
         when(salesPost.getBookId()).thenReturn(1L);
         when(salesPost.getSellerId()).thenReturn(30L);

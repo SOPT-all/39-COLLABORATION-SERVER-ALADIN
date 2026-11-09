@@ -41,4 +41,9 @@ public class Seller {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    // 결제 금액이 무료배송 기준 이상이면 0원, 아니면 판매자의 배송비를 반환한다.
+    public int calculateDeliveryFee(int amount) {
+        return amount >= freeDeliveryThreshold ? 0 : deliveryFee;
+    }
 }
