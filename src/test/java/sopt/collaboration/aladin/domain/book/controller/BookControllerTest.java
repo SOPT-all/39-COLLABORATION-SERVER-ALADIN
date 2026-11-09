@@ -74,13 +74,13 @@ class BookControllerTest {
     }
 
     @Test
-    void 서버_오류는_기존_전역_핸들러로_처리한다() throws Exception {
+    void 서버_오류는_예외_세부정보_대신_공통_오류_코드를_반환한다() throws Exception {
         when(bookService.findOnlineUsedBooks()).thenThrow(new IllegalStateException("테스트 오류"));
 
         mockMvc.perform(get("/v1/books/online-used"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
-                .andExpect(jsonPath("$.code").value("IllegalStateException: 테스트 오류"))
+                .andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value("오류가 발생했습니다. 다시 시도해 주세요."));
     }
 
