@@ -1,5 +1,7 @@
 package sopt.collaboration.aladin.global.exception;
 
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sopt.collaboration.aladin.global.code.ErrorCode;
 import sopt.collaboration.aladin.global.code.GlobalErrorCode;
@@ -34,9 +37,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     //최종적으로 HTTP 500 응답을 반환
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CommonResponse<?>> handleException(Exception e) {
+        logger.error("예상하지 못한 서버 오류가 발생했습니다.", e);
+        GlobalErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
-                .status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(CommonResponse.error(e));
+                .status(errorCode.getStatus())
+                .body(CommonResponse.error(errorCode));
     }
 
     // 쿼리 파라미터나 객체 바인딩 과정에서 검증에 실패한 경우
@@ -55,6 +60,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request) {
 
         return handleValidationException(exception);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(status).body(CommonResponse.error(GlobalErrorCode.INVALID_INPUT));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHandlerMethodValidationException(
+            HandlerMethodValidationException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        if (exception.isForReturnValue()) {
+            return handleExceptionInternal(exception, CommonResponse.error(GlobalErrorCode.INTERNAL_SERVER_ERROR),
+                    headers, status, request);
+        }
+
+        String message = exception.getAllErrors().stream()
+                .findFirst()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .orElse(GlobalErrorCode.INVALID_INPUT.getMessage());
+        return ResponseEntity.status(status).body(CommonResponse.validationError(message));
     }
 
     // 검증 예외에서 첫 번째 필드 오류 메시지를 꺼내 400 응답 생성
