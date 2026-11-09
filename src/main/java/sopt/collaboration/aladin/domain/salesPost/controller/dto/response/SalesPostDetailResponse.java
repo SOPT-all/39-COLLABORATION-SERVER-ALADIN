@@ -3,6 +3,7 @@ package sopt.collaboration.aladin.domain.salesPost.controller.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import sopt.collaboration.aladin.domain.book.entity.BookCondition;
 import sopt.collaboration.aladin.domain.salesPost.entity.UsedBookSalesPost;
+import sopt.collaboration.aladin.domain.salesPost.service.vo.SalesPostDetail;
 
 public record SalesPostDetailResponse(
         @Schema(description = "중고 판매글 ID", example = "103")
@@ -28,21 +29,18 @@ public record SalesPostDetailResponse(
         @Schema(description = "판매 완료 여부", example = "false")
         boolean isSold
 ) {
-    private static final int SHIPPING_FEE = 3500;
-    private static final int REMOTE_SHIPPING_FEE = 6200;
-
-    public static SalesPostDetailResponse of(UsedBookSalesPost salesPost) {
-        int salePrice = salesPost.getPrice();
+    public static SalesPostDetailResponse of(SalesPostDetail detail) {
+        UsedBookSalesPost salesPost = detail.salesPost();
 
         return new SalesPostDetailResponse(
                 salesPost.getId(),
                 salesPost.getBookId(),
                 salesPost.getSellerId(),
                 salesPost.getSeller().getName(),
-                salePrice,
-                SHIPPING_FEE,
-                REMOTE_SHIPPING_FEE,
-                salePrice + SHIPPING_FEE,
+                salesPost.getPrice(),
+                detail.shippingFee(),
+                detail.remoteShippingFee(),
+                detail.estimatedPaymentAmount(),
                 salesPost.getCondition(),
                 salesPost.getDescription(),
                 Boolean.TRUE.equals(salesPost.getSold())

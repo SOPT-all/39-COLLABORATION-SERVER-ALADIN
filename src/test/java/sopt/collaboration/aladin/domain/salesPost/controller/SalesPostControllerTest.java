@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -38,17 +39,26 @@ class SalesPostControllerTest {
     private MockMvc mockMvc;
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void 판매_여부와_관계없이_상세와_일반_배송_기준_예상_결제액을_반환한다(boolean sold) throws Exception {
+    @CsvSource({
+            "false, 99999, 4200, 104199",
+            "true, 99999, 4200, 104199",
+            "false, 100000, 0, 100000",
+            "false, 100001, 0, 100001"
+    })
+    void 판매_여부와_관계없이_상세와_일반_배송_기준_예상_결제액을_반환한다(
+            boolean sold, int salePrice, int expectedShippingFee, int expectedPaymentAmount) throws Exception {
         String description = "중 등급. 사용감 많음. 표지 전체 변색.";
         Seller seller = mock(Seller.class);
         UsedBookSalesPost salesPost = mock(UsedBookSalesPost.class);
         when(seller.getName()).thenReturn("우나야하");
+        when(seller.getDeliveryFee()).thenReturn(4200);
+        when(seller.getFreeDeliveryThreshold()).thenReturn(100000);
         when(salesPost.getId()).thenReturn(103L);
         when(salesPost.getBookId()).thenReturn(1L);
         when(salesPost.getSellerId()).thenReturn(30L);
         when(salesPost.getSeller()).thenReturn(seller);
-        when(salesPost.getPrice()).thenReturn(5400);
+        when(salesPost.getPrice()).thenReturn(salePrice);
+        when(salesPost.getCvsDelivery()).thenReturn(true);
         when(salesPost.getCondition()).thenReturn(BookCondition.FAIR);
         when(salesPost.getDescription()).thenReturn(description);
         when(salesPost.getSold()).thenReturn(sold);
@@ -63,10 +73,10 @@ class SalesPostControllerTest {
                 .andExpect(jsonPath("$.data.bookId").value(1))
                 .andExpect(jsonPath("$.data.sellerId").value(30))
                 .andExpect(jsonPath("$.data.sellerName").value("우나야하"))
-                .andExpect(jsonPath("$.data.salePrice").value(5400))
-                .andExpect(jsonPath("$.data.shippingFee").value(3500))
+                .andExpect(jsonPath("$.data.salePrice").value(salePrice))
+                .andExpect(jsonPath("$.data.shippingFee").value(expectedShippingFee))
                 .andExpect(jsonPath("$.data.remoteShippingFee").value(6200))
-                .andExpect(jsonPath("$.data.estimatedPaymentAmount").value(8900))
+                .andExpect(jsonPath("$.data.estimatedPaymentAmount").value(expectedPaymentAmount))
                 .andExpect(jsonPath("$.data.qualityGrade").value("FAIR"))
                 .andExpect(jsonPath("$.data.conditionDescription").value(description))
                 .andExpect(jsonPath("$.data.isSold").value(sold));

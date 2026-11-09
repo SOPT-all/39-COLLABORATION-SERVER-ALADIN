@@ -16,6 +16,6 @@ public class SalesPostController implements SalesPostApi {
     @Override
     public CommonResponse<SalesPostDetailResponse> findSalesPostDetail(Long salesPostId) {
         return CommonResponse.success(SalesPostSuccessCode.SALES_POST_DETAIL_FOUND,
-                SalesPostDetailResponse.of(salesPostService.findByIdOrThrow(salesPostId)));
+                SalesPostDetailResponse.of(salesPostService.findDetailByIdOrThrow(salesPostId)));
     }
 }
