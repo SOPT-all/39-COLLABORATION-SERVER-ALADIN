@@ -29,10 +29,6 @@ jobs:
           cache: gradle
 
       - name: Build and Test
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew clean test bootJar
