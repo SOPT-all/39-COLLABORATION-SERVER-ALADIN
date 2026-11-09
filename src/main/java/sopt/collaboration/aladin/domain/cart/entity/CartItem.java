@@ -18,7 +18,10 @@ import sopt.collaboration.aladin.domain.salesPost.entity.UsedBookSalesPost;
 @Entity
 @Getter
 @Table(name = "cart_item", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"cart_id", "usedbook_sales_post_id"})
+    @UniqueConstraint(
+            name = "cart_item_cart_id_usedbook_sales_post_id_key",
+            columnNames = {"cart_id", "usedbook_sales_post_id"}
+    )
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartItem {
@@ -40,4 +43,13 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usedbook_sales_post_id", insertable = false, updatable = false, nullable = false)
     private UsedBookSalesPost usedBookSalesPost;
+
+    private CartItem(Long cartId, Long usedBookSalesPostId) {
+        this.cartId = cartId;
+        this.usedBookSalesPostId = usedBookSalesPostId;
+    }
+
+    public static CartItem create(Long cartId, Long usedBookSalesPostId) {
+        return new CartItem(cartId, usedBookSalesPostId);
+    }
 }
