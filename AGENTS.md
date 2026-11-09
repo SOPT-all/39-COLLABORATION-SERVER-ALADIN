@@ -18,6 +18,9 @@ Java 21 · Spring Boot 4.1.2 · Gradle · Spring Data JPA · Supabase PostgreSQL
 Windows PowerShell에서는 `.\gradlew.bat`을 사용합니다.
 Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
+- CI의 빌드·단위 테스트 단계는 외부 또는 운영 DB에 연결하지 않습니다.
+- 운영 DB 접속 정보는 GitHub Actions 빌드 단계가 아니라 EC2 런타임의 `.env` 또는 systemd 환경 설정에서 주입합니다.
+
 ## 아키텍처
 
 모놀리식 단일 애플리케이션 + **도메인형 패키지 구조**(Controller-Service-Repository 패턴 유지)로 확정했습니다.

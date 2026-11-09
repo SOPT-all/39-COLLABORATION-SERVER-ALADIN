@@ -120,6 +120,27 @@ http://localhost:8080/swagger-ui/index.html
 
 `main` 브랜치에 변경사항이 반영되면 GitHub Actions가 JAR를 빌드해 EC2로 전송하고 `aladin.service`를 재시작합니다. 배포 후 Swagger UI가 1분 안에 응답하지 않으면 이전 JAR로 복구합니다.
 
+### 빌드와 운영 DB 설정 분리
+
+GitHub Actions의 `Build and Test` 단계는 외부 DB에 연결하지 않고 단위 테스트와 JAR 생성을 수행합니다. DB 접속 정보는 빌드된 JAR에 포함되지 않습니다.
+
+배포된 애플리케이션은 EC2 런타임의 `.env` 또는 `aladin.service`의 systemd 환경 설정에서 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`를 주입받아 운영 DB에 연결합니다. 프로젝트 루트의 `.env`를 사용한다면 `aladin.service`의 `WorkingDirectory`가 프로젝트 루트를 가리켜야 합니다.
+
+최초 배포 전에는 값을 출력하지 않고 설정 경로와 필수 항목의 존재 여부만 확인합니다.
+
+```bash
+sudo systemctl show aladin \
+  --property=WorkingDirectory \
+  --property=EnvironmentFiles
+
+cd ~/39-COLLABORATION-SERVER-ALADIN
+grep -q '^DB_URL=' .env && echo "DB_URL configured"
+grep -q '^DB_USERNAME=' .env && echo "DB_USERNAME configured"
+grep -q '^DB_PASSWORD=' .env && echo "DB_PASSWORD configured"
+```
+
+DB 접속 정보의 실제 값은 GitHub Actions 로그, 코드, 문서에 출력하거나 커밋하지 않습니다.
+
 ### 1. 배포 전용 SSH 키 생성
 
 로컬 Windows PowerShell에서 실행합니다.
