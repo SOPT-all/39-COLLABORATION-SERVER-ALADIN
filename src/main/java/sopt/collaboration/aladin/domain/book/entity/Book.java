@@ -34,6 +34,9 @@ public class Book {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
+    @Column(name = "original_price", nullable = false)
+    private Integer originalPrice;
+
     @Column(name = "short_intro", columnDefinition = "TEXT")
     private String shortIntro;
 
