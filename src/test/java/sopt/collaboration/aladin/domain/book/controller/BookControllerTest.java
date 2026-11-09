@@ -24,7 +24,7 @@ import sopt.collaboration.aladin.global.config.WebConfig;
 
 @WebMvcTest(BookController.class)
 @Import(WebConfig.class)
-@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:3000")
+@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:5173")
 class BookControllerTest {
 
     @MockitoBean
@@ -87,9 +87,9 @@ class BookControllerTest {
     @Test
     void 허용된_프론트엔드_출처의_사전_요청을_허용한다() throws Exception {
         mockMvc.perform(options("/v1/books/online-used")
-                        .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:5173")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
                 .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"));
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"));
     }
 }
