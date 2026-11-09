@@ -1,6 +1,7 @@
 package sopt.collaboration.aladin.global.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -11,9 +12,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sopt.collaboration.aladin.global.code.ErrorCode;
 import sopt.collaboration.aladin.global.code.GlobalErrorCode;
@@ -33,8 +33,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(CommonResponse.error(errorCode));
     }
 
-    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentTypeMismatchException.class})
-    public ResponseEntity<CommonResponse<?>> handleInvalidInput(Exception exception) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<CommonResponse<?>> handleInvalidInput(ConstraintViolationException exception) {
         GlobalErrorCode errorCode = GlobalErrorCode.INVALID_INPUT;
 
         return ResponseEntity
@@ -73,11 +73,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(status).body(CommonResponse.error(GlobalErrorCode.INVALID_INPUT));
+    }
+
+    @Override
     protected ResponseEntity<Object> handleHandlerMethodValidationException(
             HandlerMethodValidationException exception,
             HttpHeaders headers,
             HttpStatusCode status,
             WebRequest request) {
+        if (exception.isForReturnValue()) {
+            return handleExceptionInternal(exception, CommonResponse.error(GlobalErrorCode.INTERNAL_SERVER_ERROR),
+                    headers, status, request);
+        }
 
         String message = exception.getAllErrors().stream()
                 .findFirst()
