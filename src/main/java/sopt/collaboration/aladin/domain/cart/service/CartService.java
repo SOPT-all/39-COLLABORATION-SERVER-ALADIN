@@ -1,6 +1,7 @@
 package sopt.collaboration.aladin.domain.cart.service;
 
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,9 @@ import sopt.collaboration.aladin.domain.salesPost.repository.UsedBookSalesPostRe
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CartService {
+
+    private static final String CART_ITEM_UNIQUE_CONSTRAINT =
+            "cart_item_cart_id_usedbook_sales_post_id_key";
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -44,7 +48,24 @@ public class CartService {
         try {
             cartItemRepository.saveAndFlush(CartItem.create(cartId, usedBookSalesPostId));
         } catch (DataIntegrityViolationException exception) {
-            throw new CartItemAlreadyExistsException();
+            if (isDuplicateCartItem(exception)) {
+                throw new CartItemAlreadyExistsException();
+            }
+            throw exception;
         }
+    }
+
+    private boolean isDuplicateCartItem(DataIntegrityViolationException exception) {
+        Throwable cause = exception;
+
+        while (cause != null) {
+            if (cause instanceof ConstraintViolationException violation
+                    && CART_ITEM_UNIQUE_CONSTRAINT.equals(violation.getConstraintName())) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+
+        return false;
     }
 }

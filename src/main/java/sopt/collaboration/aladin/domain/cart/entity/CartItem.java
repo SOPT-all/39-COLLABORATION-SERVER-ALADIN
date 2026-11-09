@@ -18,7 +18,10 @@ import sopt.collaboration.aladin.domain.salesPost.entity.UsedBookSalesPost;
 @Entity
 @Getter
 @Table(name = "cart_item", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"cart_id", "usedbook_sales_post_id"})
+    @UniqueConstraint(
+            name = "cart_item_cart_id_usedbook_sales_post_id_key",
+            columnNames = {"cart_id", "usedbook_sales_post_id"}
+    )
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartItem {
