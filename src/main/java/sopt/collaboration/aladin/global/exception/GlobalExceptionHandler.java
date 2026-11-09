@@ -1,5 +1,6 @@
 package sopt.collaboration.aladin.global.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<CommonResponse<?>> handleCustomException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(CommonResponse.error(errorCode));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<CommonResponse<?>> handleInvalidInput(ConstraintViolationException exception) {
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_INPUT;
 
         return ResponseEntity
                 .status(errorCode.getStatus())
@@ -70,7 +80,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHandlerMethodValidationException(
-            HandlerMethodValidationException exception, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+            HandlerMethodValidationException exception,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
         if (exception.isForReturnValue()) {
             return handleExceptionInternal(exception, CommonResponse.error(GlobalErrorCode.INTERNAL_SERVER_ERROR),
                     headers, status, request);
@@ -80,6 +93,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .findFirst()
                 .map(MessageSourceResolvable::getDefaultMessage)
                 .orElse(GlobalErrorCode.INVALID_INPUT.getMessage());
+
         return ResponseEntity.status(status).body(CommonResponse.validationError(message));
     }
 
