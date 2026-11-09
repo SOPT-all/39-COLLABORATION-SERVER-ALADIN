@@ -47,9 +47,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     //최종적으로 HTTP 500 응답을 반환
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CommonResponse<?>> handleException(Exception e) {
+        logger.error("예상하지 못한 서버 오류가 발생했습니다.", e);
+        GlobalErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
-                .status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-                .body(CommonResponse.error(e));
+                .status(errorCode.getStatus())
+                .body(CommonResponse.error(errorCode));
     }
 
     // 쿼리 파라미터나 객체 바인딩 과정에서 검증에 실패한 경우
