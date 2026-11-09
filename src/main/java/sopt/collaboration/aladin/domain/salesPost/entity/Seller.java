@@ -28,6 +28,12 @@ public class Seller {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "delivery_fee", nullable = false)
+    private Integer deliveryFee;
+
+    @Column(name = "free_delivery_threshold", nullable = false)
+    private Integer freeDeliveryThreshold;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "seller_type")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

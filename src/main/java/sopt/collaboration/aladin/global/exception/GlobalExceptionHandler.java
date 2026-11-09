@@ -1,5 +1,7 @@
 package sopt.collaboration.aladin.global.exception;
 
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -9,6 +11,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import sopt.collaboration.aladin.global.code.ErrorCode;
@@ -23,6 +27,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<CommonResponse<?>> handleCustomException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(CommonResponse.error(errorCode));
+    }
+
+    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<CommonResponse<?>> handleInvalidInput(Exception exception) {
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_INPUT;
 
         return ResponseEntity
                 .status(errorCode.getStatus())
@@ -55,6 +68,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request) {
 
         return handleValidationException(exception);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHandlerMethodValidationException(
+            HandlerMethodValidationException exception,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        String message = exception.getAllErrors().stream()
+                .findFirst()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .orElse(GlobalErrorCode.INVALID_INPUT.getMessage());
+
+        return ResponseEntity.status(status).body(CommonResponse.validationError(message));
     }
 
     // 검증 예외에서 첫 번째 필드 오류 메시지를 꺼내 400 응답 생성
