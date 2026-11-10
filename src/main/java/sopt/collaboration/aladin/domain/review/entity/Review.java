@@ -49,4 +49,9 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id", insertable = false, updatable = false, nullable = false)
     private Book book;
+
+    // 공감 상태를 뒤집는다. 비어 있으면 공감하지 않은 상태로 본다. 공감 수는 화면에 없어 바꾸지 않는다.
+    public void toggleLike() {
+        this.liked = !Boolean.TRUE.equals(liked);
+    }
 }
