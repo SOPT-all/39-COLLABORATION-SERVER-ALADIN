@@ -28,7 +28,7 @@ class ReviewServiceTest {
     @Test
     void 공감하지_않은_리뷰를_토글하면_공감_상태가_된다() {
         Review review = review(false, 3);
-        when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
+        when(reviewRepository.findWithLockById(1L)).thenReturn(Optional.of(review));
 
         Review result = reviewService.toggleLike(1L);
 
@@ -38,7 +38,7 @@ class ReviewServiceTest {
     @Test
     void 공감한_리뷰를_토글하면_공감이_취소된다() {
         Review review = review(true, 3);
-        when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
+        when(reviewRepository.findWithLockById(1L)).thenReturn(Optional.of(review));
 
         Review result = reviewService.toggleLike(1L);
 
@@ -47,7 +47,7 @@ class ReviewServiceTest {
 
     @Test
     void 리뷰가_없으면_예외가_발생한다() {
-        when(reviewRepository.findById(999L)).thenReturn(Optional.empty());
+        when(reviewRepository.findWithLockById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> reviewService.toggleLike(999L))
                 .isInstanceOf(ReviewNotFoundException.class);

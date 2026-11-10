@@ -22,6 +22,6 @@ public class ReviewService {
     }
 
     private Review findByIdOrThrow(Long reviewId) {
-        return reviewRepository.findById(reviewId).orElseThrow(ReviewNotFoundException::new);
+        return reviewRepository.findWithLockById(reviewId).orElseThrow(ReviewNotFoundException::new);
     }
 }
