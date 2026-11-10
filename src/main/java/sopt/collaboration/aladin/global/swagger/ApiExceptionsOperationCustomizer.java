@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springdoc.core.customizers.OperationCustomizer;
@@ -29,8 +30,10 @@ public class ApiExceptionsOperationCustomizer implements OperationCustomizer {
             operation.setResponses(new ApiResponses());
         }
 
-        Map<HttpStatus, Map<String, Example>> examplesByStatus = new LinkedHashMap<>();
-        addExample(examplesByStatus, GlobalErrorCode.INVALID_INPUT);
+        Map<HttpStatus, Map<String, Example>> examplesByStatus = new EnumMap<>(HttpStatus.class);
+        if (handlerMethod.getMethodParameters().length > 0) {
+            addExample(examplesByStatus, GlobalErrorCode.INVALID_INPUT);
+        }
         addExample(examplesByStatus, GlobalErrorCode.INTERNAL_SERVER_ERROR);
 
         if (apiExceptions != null) {

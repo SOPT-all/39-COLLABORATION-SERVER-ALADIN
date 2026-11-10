@@ -29,6 +29,7 @@ class ApiExceptionsOperationCustomizerTest {
 
         customizer.customize(operation, new HandlerMethod(new CartController(null), method));
 
+        assertThat(operation.getResponses().keySet()).containsExactly("200", "400", "404", "409", "500");
         assertThat(operation.getResponses().get("200")).isSameAs(successResponse);
         assertThat(operation.getResponses().get("404").getContent().get("application/json").getExamples())
                 .containsOnlyKeys("CART_NOT_FOUND", "SALES_POST_NOT_FOUND");
@@ -46,14 +47,13 @@ class ApiExceptionsOperationCustomizerTest {
     }
 
     @Test
-    void 비즈니스_예외가_없는_API도_글로벌_오류_응답을_문서화한다() throws Exception {
+    void 파라미터가_없는_API는_검증_실패를_제외하고_글로벌_오류_응답을_문서화한다() throws Exception {
         Method method = BookController.class.getMethod("findOnlineUsedBooks");
         Operation operation = new Operation();
 
         customizer.customize(operation, new HandlerMethod(new BookController(null), method));
 
-        assertThat(operation.getResponses().get("400").getContent().get("application/json").getExamples())
-                .containsOnlyKeys("INVALID_INPUT");
+        assertThat(operation.getResponses()).doesNotContainKey("400");
         assertThat(operation.getResponses().get("500").getContent().get("application/json").getExamples())
                 .containsOnlyKeys("INTERNAL_SERVER_ERROR");
     }
