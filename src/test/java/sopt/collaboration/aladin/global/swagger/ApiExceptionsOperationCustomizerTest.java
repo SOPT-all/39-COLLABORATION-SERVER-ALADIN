@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.method.HandlerMethod;
+import sopt.collaboration.aladin.domain.book.controller.BookController;
 import sopt.collaboration.aladin.domain.cart.code.CartErrorCode;
 import sopt.collaboration.aladin.domain.cart.controller.CartController;
 import sopt.collaboration.aladin.domain.cart.controller.dto.request.CartItemCreateRequest;
@@ -33,9 +34,28 @@ class ApiExceptionsOperationCustomizerTest {
                 .containsOnlyKeys("CART_NOT_FOUND", "SALES_POST_NOT_FOUND");
         assertThat(operation.getResponses().get("409").getContent().get("application/json").getExamples())
                 .containsOnlyKeys("SALES_POST_ALREADY_SOLD", "CART_ITEM_ALREADY_EXISTS");
+        assertThat(operation.getResponses().get("400").getContent().get("application/json")
+                .getExamples().get("INVALID_INPUT").getValue())
+                .isEqualTo(CommonResponse.error(GlobalErrorCode.INVALID_INPUT));
+        assertThat(operation.getResponses().get("500").getContent().get("application/json")
+                .getExamples().get("INTERNAL_SERVER_ERROR").getValue())
+                .isEqualTo(CommonResponse.error(GlobalErrorCode.INTERNAL_SERVER_ERROR));
         assertThat(operation.getResponses().get("404").getContent().get("application/json")
                 .getExamples().get("CART_NOT_FOUND").getValue())
                 .isEqualTo(CommonResponse.error(CartErrorCode.CART_NOT_FOUND));
+    }
+
+    @Test
+    void 비즈니스_예외가_없는_API도_글로벌_오류_응답을_문서화한다() throws Exception {
+        Method method = BookController.class.getMethod("findOnlineUsedBooks");
+        Operation operation = new Operation();
+
+        customizer.customize(operation, new HandlerMethod(new BookController(null), method));
+
+        assertThat(operation.getResponses().get("400").getContent().get("application/json").getExamples())
+                .containsOnlyKeys("INVALID_INPUT");
+        assertThat(operation.getResponses().get("500").getContent().get("application/json").getExamples())
+                .containsOnlyKeys("INTERNAL_SERVER_ERROR");
     }
 
     @Test

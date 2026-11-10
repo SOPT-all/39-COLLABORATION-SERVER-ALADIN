@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import sopt.collaboration.aladin.global.code.ErrorCode;
+import sopt.collaboration.aladin.global.code.GlobalErrorCode;
 import sopt.collaboration.aladin.global.dto.CommonResponse;
 import sopt.collaboration.aladin.global.exception.BusinessException;
 
@@ -24,30 +25,34 @@ public class ApiExceptionsOperationCustomizer implements OperationCustomizer {
     @Override
     public Operation customize(Operation operation, HandlerMethod handlerMethod) {
         ApiExceptions apiExceptions = handlerMethod.getMethodAnnotation(ApiExceptions.class);
-        if (apiExceptions == null) {
-            return operation;
-        }
-
         if (operation.getResponses() == null) {
             operation.setResponses(new ApiResponses());
         }
 
         Map<HttpStatus, Map<String, Example>> examplesByStatus = new LinkedHashMap<>();
-        for (Class<? extends BusinessException> exceptionClass : apiExceptions.value()) {
-            ErrorCode errorCode = resolveErrorCode(exceptionClass);
-            Example example = new Example()
-                    .summary(errorCode.name())
-                    .description(errorCode.getMessage())
-                    .value(CommonResponse.error(errorCode));
+        addExample(examplesByStatus, GlobalErrorCode.INVALID_INPUT);
+        addExample(examplesByStatus, GlobalErrorCode.INTERNAL_SERVER_ERROR);
 
-            examplesByStatus
-                    .computeIfAbsent(errorCode.getStatus(), status -> new LinkedHashMap<>())
-                    .put(errorCode.name(), example);
+        if (apiExceptions != null) {
+            for (Class<? extends BusinessException> exceptionClass : apiExceptions.value()) {
+                addExample(examplesByStatus, resolveErrorCode(exceptionClass));
+            }
         }
 
         examplesByStatus.forEach((status, examples) ->
                 mergeExamples(operation.getResponses(), status, examples));
         return operation;
+    }
+
+    private void addExample(Map<HttpStatus, Map<String, Example>> examplesByStatus, ErrorCode errorCode) {
+        Example example = new Example()
+                .summary(errorCode.name())
+                .description(errorCode.getMessage())
+                .value(CommonResponse.error(errorCode));
+
+        examplesByStatus
+                .computeIfAbsent(errorCode.getStatus(), status -> new LinkedHashMap<>())
+                .put(errorCode.name(), example);
     }
 
     private void mergeExamples(ApiResponses responses, HttpStatus status, Map<String, Example> examples) {
