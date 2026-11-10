@@ -1,11 +1,13 @@
 package sopt.collaboration.aladin.domain.book.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +17,7 @@ import sopt.collaboration.aladin.domain.book.entity.Author;
 import sopt.collaboration.aladin.domain.book.entity.Book;
 import sopt.collaboration.aladin.domain.book.entity.BookAuthor;
 import sopt.collaboration.aladin.domain.book.entity.BookAuthorId;
+import sopt.collaboration.aladin.domain.book.exception.BookNotFoundException;
 import sopt.collaboration.aladin.domain.book.repository.BookAuthorRepository;
 import sopt.collaboration.aladin.domain.book.repository.BookRepository;
 import sopt.collaboration.aladin.domain.book.service.vo.BookWithAuthors;
@@ -30,6 +33,22 @@ class BookServiceTest {
 
     @InjectMocks
     private BookService bookService;
+
+    @Test
+    void 도서를_ID로_조회한다() {
+        Book book = mock(Book.class);
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+
+        assertThat(bookService.findByIdOrThrow(1L)).isSameAs(book);
+    }
+
+    @Test
+    void 도서가_없으면_예외가_발생한다() {
+        when(bookRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookService.findByIdOrThrow(999L))
+                .isInstanceOf(BookNotFoundException.class);
+    }
 
     @Test
     void 전체_도서를_조회하고_여러_저자를_도서별로_묶는다() {

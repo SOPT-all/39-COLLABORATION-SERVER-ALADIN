@@ -53,10 +53,10 @@ class CartServiceTest {
         Seller seller = mock(Seller.class);
         when(seller.getId()).thenReturn(30L);
         when(seller.getName()).thenReturn("우냐야하");
-        when(seller.getDeliveryFee()).thenReturn(3500);
         when(seller.getFreeDeliveryThreshold()).thenReturn(100000);
-        CartItem first = cartItem(1L, 11L, 1L, 15000, 5400, BookCondition.GOOD, seller, true);
-        CartItem second = cartItem(2L, 12L, 3L, 33000, 18000, BookCondition.EXCELLENT, seller, false);
+        when(seller.calculateDeliveryFee(23400)).thenReturn(3500);
+        CartItem first = cartItem(1L, 11L, 1L, 15000, 5400, 64, BookCondition.GOOD, seller, true);
+        CartItem second = cartItem(2L, 12L, 3L, 33000, 18000, 45, BookCondition.EXCELLENT, seller, false);
         when(cartRepository.existsById(1L)).thenReturn(true);
         when(cartItemRepository.findAllWithDetailsByCartId(1L)).thenReturn(List.of(first, second));
 
@@ -82,7 +82,8 @@ class CartServiceTest {
         when(seller.getId()).thenReturn(30L);
         when(seller.getName()).thenReturn("우냐야하");
         when(seller.getFreeDeliveryThreshold()).thenReturn(5000);
-        CartItem item = cartItem(1L, 11L, 1L, 15000, 5400, BookCondition.GOOD, seller, true);
+        when(seller.calculateDeliveryFee(5400)).thenReturn(0);
+        CartItem item = cartItem(1L, 11L, 1L, 15000, 5400, 64, BookCondition.GOOD, seller, true);
         when(cartRepository.existsById(1L)).thenReturn(true);
         when(cartItemRepository.findAllWithDetailsByCartId(1L)).thenReturn(List.of(item));
 
@@ -168,6 +169,7 @@ class CartServiceTest {
             Long bookId,
             int originalPrice,
             int salePrice,
+            int discountRate,
             BookCondition condition,
             Seller seller,
             boolean firstInSellerGroup
@@ -184,6 +186,7 @@ class CartServiceTest {
         when(post.getSellerId()).thenReturn(sellerId);
         when(post.getBook()).thenReturn(book);
         when(post.getPrice()).thenReturn(salePrice);
+        when(post.calculateDiscountRate()).thenReturn(discountRate);
         when(post.getCondition()).thenReturn(condition);
         when(post.getCvsDelivery()).thenReturn(true);
         if (firstInSellerGroup) {

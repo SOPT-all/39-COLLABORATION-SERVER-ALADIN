@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sopt.collaboration.aladin.domain.book.entity.Book;
+import sopt.collaboration.aladin.domain.book.exception.BookNotFoundException;
 import sopt.collaboration.aladin.domain.book.repository.BookAuthorRepository;
 import sopt.collaboration.aladin.domain.book.repository.BookRepository;
 import sopt.collaboration.aladin.domain.book.service.vo.BookWithAuthors;
@@ -34,5 +35,10 @@ public class BookService {
         return books.stream()
                 .map(book -> new BookWithAuthors(book, authorsByBookId.getOrDefault(book.getId(), List.of())))
                 .toList();
+    }
+
+    public Book findByIdOrThrow(Long bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(BookNotFoundException::new);
     }
 }

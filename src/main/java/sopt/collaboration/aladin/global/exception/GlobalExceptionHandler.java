@@ -104,7 +104,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         String message = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(FieldError::getDefaultMessage)
+                .map(fieldError -> fieldError.isBindingFailure()
+                        ? GlobalErrorCode.INVALID_INPUT.getMessage()
+                        : fieldError.getDefaultMessage())
                 .findFirst()
                 .orElse("올바르지 않은 입력값입니다.");
 

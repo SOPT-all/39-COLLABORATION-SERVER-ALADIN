@@ -63,4 +63,13 @@ public class UsedBookSalesPost {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "seller_id", insertable = false, updatable = false, nullable = false)
     private Seller seller;
+
+    // 도서 정가 대비 할인율(%). 소수점은 버리고, 정가가 0 이하이거나 판매가가 정가보다 비싸면 0이다.
+    public int calculateDiscountRate() {
+        int originalPrice = book.getOriginalPrice();
+        if (originalPrice <= 0) {
+            return 0;
+        }
+        return Math.max(0, (int) ((long) (originalPrice - price) * 100 / originalPrice));
+    }
 }

@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import sopt.collaboration.aladin.domain.book.entity.BookCondition;
+import sopt.collaboration.aladin.domain.book.service.BookService;
 import sopt.collaboration.aladin.domain.salesPost.entity.Seller;
 import sopt.collaboration.aladin.domain.salesPost.entity.UsedBookSalesPost;
 import sopt.collaboration.aladin.domain.salesPost.repository.UsedBookSalesPostRepository;
@@ -34,6 +35,9 @@ class SalesPostControllerTest {
 
     @MockitoBean
     private UsedBookSalesPostRepository salesPostRepository;
+
+    @MockitoBean
+    private BookService bookService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,8 +55,7 @@ class SalesPostControllerTest {
         Seller seller = mock(Seller.class);
         UsedBookSalesPost salesPost = mock(UsedBookSalesPost.class);
         when(seller.getName()).thenReturn("우나야하");
-        when(seller.getDeliveryFee()).thenReturn(4200);
-        when(seller.getFreeDeliveryThreshold()).thenReturn(100000);
+        when(seller.calculateDeliveryFee(salePrice)).thenReturn(expectedShippingFee);
         when(salesPost.getId()).thenReturn(103L);
         when(salesPost.getBookId()).thenReturn(1L);
         when(salesPost.getSellerId()).thenReturn(30L);
