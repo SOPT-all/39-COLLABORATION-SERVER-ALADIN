@@ -11,12 +11,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import sopt.collaboration.aladin.domain.cart.controller.dto.request.CartItemCreateRequest;
 import sopt.collaboration.aladin.domain.cart.controller.dto.response.CartReadResponse;
+import sopt.collaboration.aladin.domain.cart.exception.CartItemAlreadyExistsException;
+import sopt.collaboration.aladin.domain.cart.exception.CartNotFoundException;
+import sopt.collaboration.aladin.domain.salesPost.exception.SalesPostAlreadySoldException;
+import sopt.collaboration.aladin.domain.salesPost.exception.SalesPostNotFoundException;
 import sopt.collaboration.aladin.global.dto.CommonResponse;
+import sopt.collaboration.aladin.global.swagger.ApiExceptions;
 
 @Tag(name = "장바구니")
 public interface CartApi {
 
     @Operation(summary = "장바구니 조회")
+    @ApiExceptions(CartNotFoundException.class)
     @GetMapping("/v1/carts/{cartId}")
     CommonResponse<CartReadResponse> readCart(
             @Parameter(description = "장바구니 ID", example = "1")
@@ -25,6 +31,12 @@ public interface CartApi {
     );
 
     @Operation(summary = "장바구니 상품 추가")
+    @ApiExceptions({
+            CartNotFoundException.class,
+            SalesPostNotFoundException.class,
+            SalesPostAlreadySoldException.class,
+            CartItemAlreadyExistsException.class
+    })
     @PostMapping("/v1/carts/{cartId}/items")
     CommonResponse<Void> addCartItem(
             @PathVariable Long cartId,
