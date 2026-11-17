@@ -18,6 +18,7 @@ import sopt.collaboration.aladin.domain.book.entity.BookCondition;
 import sopt.collaboration.aladin.domain.book.entity.Grade;
 import sopt.collaboration.aladin.domain.book.exception.BookNotFoundException;
 import sopt.collaboration.aladin.domain.salesPost.entity.PriceSort;
+import sopt.collaboration.aladin.domain.salesPost.entity.SellerType;
 import sopt.collaboration.aladin.domain.salesPost.service.SalesPostService;
 import sopt.collaboration.aladin.domain.salesPost.service.vo.BookSellers;
 import sopt.collaboration.aladin.domain.salesPost.service.vo.BookSellers.SellerPost;
@@ -36,7 +37,7 @@ class SalesPostSellersControllerTest {
     @Test
     void 중고_판매_목록을_공통_성공_응답으로_반환한다() throws Exception {
         SellerPost sellerPost = new SellerPost(
-                10L, 3L, "알라딘 중고서점", BookCondition.EXCELLENT, 5400, 64, 3500, 100000, true, false
+                10L, 3L, "알라딘 중고서점", SellerType.GOLD, BookCondition.EXCELLENT, 5400, 64, 3500, 100000, true, false
         );
         when(salesPostService.findSellersByBookId(1L, PriceSort.LOWEST, Grade.BEST, true))
                 .thenReturn(new BookSellers(1L, "소년이 온다", List.of(sellerPost)));
@@ -54,6 +55,7 @@ class SalesPostSellersControllerTest {
                 .andExpect(jsonPath("$.data.sellers[0].usedBookId").value(10))
                 .andExpect(jsonPath("$.data.sellers[0].sellerId").value(3))
                 .andExpect(jsonPath("$.data.sellers[0].sellerName").value("알라딘 중고서점"))
+                .andExpect(jsonPath("$.data.sellers[0].sellerType").value("GOLD"))
                 .andExpect(jsonPath("$.data.sellers[0].grade").value("BEST"))
                 .andExpect(jsonPath("$.data.sellers[0].price").value(5400))
                 .andExpect(jsonPath("$.data.sellers[0].discountRate").value(64))

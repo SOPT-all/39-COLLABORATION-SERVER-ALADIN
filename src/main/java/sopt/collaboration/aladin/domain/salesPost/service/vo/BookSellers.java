@@ -2,6 +2,7 @@ package sopt.collaboration.aladin.domain.salesPost.service.vo;
 
 import java.util.List;
 import sopt.collaboration.aladin.domain.book.entity.BookCondition;
+import sopt.collaboration.aladin.domain.salesPost.entity.SellerType;
 
 public record BookSellers(
         Long bookId,
@@ -12,6 +13,7 @@ public record BookSellers(
             Long usedBookSalesPostId,
             Long sellerId,
             String sellerName,
+            SellerType sellerType,
             BookCondition condition,
             int price,
             int discountRate,

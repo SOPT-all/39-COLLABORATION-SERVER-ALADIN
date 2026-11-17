@@ -3,6 +3,7 @@ package sopt.collaboration.aladin.domain.salesPost.controller.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import sopt.collaboration.aladin.domain.book.entity.Grade;
+import sopt.collaboration.aladin.domain.salesPost.entity.SellerType;
 import sopt.collaboration.aladin.domain.salesPost.service.vo.BookSellers;
 
 public record BookSellersResponse(
@@ -30,6 +31,8 @@ public record BookSellersResponse(
             Long sellerId,
             @Schema(description = "판매자 이름", example = "알라딘 중고서점")
             String sellerName,
+            @Schema(description = "판매자 등급 (GENERAL: 일반, PROFESSIONAL: 전문셀러, GOLD: 골드셀러)", example = "GOLD")
+            SellerType sellerType,
             @Schema(description = "중고 도서 품질 등급", example = "BEST")
             Grade grade,
             @Schema(description = "판매 가격(원)", example = "5400")
@@ -50,6 +53,7 @@ public record BookSellersResponse(
                     sellerPost.usedBookSalesPostId(),
                     sellerPost.sellerId(),
                     sellerPost.sellerName(),
+                    sellerPost.sellerType(),
                     Grade.from(sellerPost.condition()),
                     sellerPost.price(),
                     sellerPost.discountRate(),

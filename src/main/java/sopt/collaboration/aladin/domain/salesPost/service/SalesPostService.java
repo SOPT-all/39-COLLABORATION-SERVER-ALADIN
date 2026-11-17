@@ -67,6 +67,7 @@ public class SalesPostService {
                 salesPost.getId(),
                 seller.getId(),
                 seller.getName(),
+                seller.getSellerType(),
                 salesPost.getCondition(),
                 price,
                 salesPost.calculateDiscountRate(),
