@@ -76,7 +76,7 @@ DB_USERNAME=<username>
 DB_PASSWORD=<password>
 JPA_DDL_AUTO=validate
 SERVER_PORT=8080
-CORS_ALLOWED_ORIGINS=http://localhost:5173
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://39-collaboration-web-aladin.vercel.app,https://39-collaboration-web-aladin-*-sopt2.vercel.app
 ```
 
 | 환경변수 | 필수 여부 | 설명 |
@@ -86,7 +86,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 | `DB_PASSWORD` | 필수 | PostgreSQL 비밀번호 |
 | `JPA_DDL_AUTO` | 선택 | Hibernate 스키마 처리 방식, 기본값 `validate` |
 | `SERVER_PORT` | 선택 | 애플리케이션 실행 포트, 기본값 `8080` |
-| `CORS_ALLOWED_ORIGINS` | 선택 | 허용할 프론트엔드 Origin, 기본값 `http://localhost:5173` |
+| `CORS_ALLOWED_ORIGINS` | 선택 | 쉼표로 구분한 프론트엔드 Origin 패턴. 기본값은 로컬·운영·Vercel 프리뷰 주소 |
 
 `.env` 파일은 Git으로 관리하지 않습니다.
 
