@@ -24,7 +24,10 @@ import sopt.collaboration.aladin.global.config.WebConfig;
 
 @WebMvcTest(BookController.class)
 @Import(WebConfig.class)
-@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:5173")
+@TestPropertySource(properties = "app.cors.allowed-origins="
+        + "http://localhost:5173,"
+        + "https://39-collaboration-web-aladin.vercel.app,"
+        + "https://39-collaboration-web-aladin-*-sopt2.vercel.app")
 class BookControllerTest {
 
     @MockitoBean
@@ -91,5 +94,27 @@ class BookControllerTest {
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"));
+    }
+
+    @Test
+    void 운영_출처의_POST_사전_요청을_허용한다() throws Exception {
+        String origin = "https://39-collaboration-web-aladin.vercel.app";
+
+        mockMvc.perform(options("/v1/books/online-used")
+                        .header(HttpHeaders.ORIGIN, origin)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
+    }
+
+    @Test
+    void 프리뷰_출처의_PATCH_사전_요청을_허용한다() throws Exception {
+        String origin = "https://39-collaboration-web-aladin-123-sopt2.vercel.app";
+
+        mockMvc.perform(options("/v1/books/online-used")
+                        .header(HttpHeaders.ORIGIN, origin)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
     }
 }
